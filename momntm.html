@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>momntm</title>
+		<style>
+			html { background: #000 }
+			html, body { height: 100% }
+			body {
+				font-family: 'Helvetica', sans-serif;
+				-webkit-text-size-adjust: none;
+				tab-size: 4;
+				-moz-tab-size: 4;
+				line-height: 1.2;
+				color: #eee;
+				font-family: Courier;
+				display: flex;
+				flex-direction: column;
+				margin: 0;
+			}
+			* {
+				box-sizing: border-box;
+				-moz-box-sizing: border-box;
+				-webkit-overflow-scrolling: touch;
+			}
+			h1 {
+				font-family: Courier;
+				color: #04f;
+				font-size: 4em;
+				text-align: center;
+				font-weight: normal;
+				margin: 0.5em 0;
+			}
+			main { flex-grow: 1 }
+			main, #output { margin: 0 1em }
+			#cont {
+				display: flex;
+				flex-grow: 1;
+			}
+			#challenges {
+				background: #ffa;
+				color: #000;
+				padding: 1em;
+			}
+			#challenges h2 { margin: 0 }
+			#console {
+				height: 25%;
+				color: #0d0;
+				border-top: 1px solid #888;
+				overflow: auto;
+			}
+			#console, #spacer { width: 100% }
+			#console > label {
+				display: flex;
+				background: #222;
+				padding: 0 1em;
+				flex-shrink: 0;
+			}
+			#console > label > span { white-space: pre }
+			input {
+				margin: -1px 0 1px;
+				padding: 0;
+				border: none;
+				flex-grow: 1;
+				font: 1em Courier;
+				color: #0d0;
+				background: transparent;
+			}
+			pre { font: 1em Courier }
+		</style>
+		<script>
+			function start() {
+				document.getElementById('challenges').hidden = false;
+				return '';
+			}
+			var commandList = ['help: shows this', 'start: starts the game', 'launch: start mission'];
+			function respond(text) {
+				var command = text.split(' ', 2)[0];
+				if (command == 'help') return 'Commands:\n- ' + commandList.join('\n- ') + '\n';
+				if (command == 'start') return start();
+				return '';
+			}
+			addEventListener('DOMContentLoaded', function() {
+				document.getElementById('input').addEventListener('keypress', function(e) {
+					if (e.keyCode == 13) {
+						output.appendChild(document.createTextNode('> ' + this.value + '\n' + respond(this.value)));
+						this.value = '';
+						this.scrollIntoView();
+					}
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<div id="cont">
+			<aside id="challenges" hidden="">
+				<h2>Challenges</h2>
+				<ul>
+					<li>Launch your first rocket</li>
+					<li>Fire the engine</li>
+					<li>Survive for 5s</li>
+					<li>Collect energy</li>
+					<li>Shoot an asteroid</li>
+					<li>Survive for 15s</li>
+					<li>Survive for 1m</li>
+					<li>Collect 10 joules</li>
+					<li>Collect 50 joules</li>
+				</ul>
+			</aside>
+			<main>
+				<h1>DevDoodle</h1>
+				<h1>momntm</h1>
+				<p>Code your spaceship to:</p>
+				<ul>
+					<li>avoid asteroids</li>
+					<li>collect energy</li>
+					<li>beat competitors</li>
+				</ul>
+			</main>
+		</div>
+		<section id="console">
+			<pre id="output"></pre>
+			<label><span>> </span><input id="input" autofocus="" /></label>
+		</console>
+	</body>
+</html>
