@@ -1,0 +1,198 @@
+html { background: #111 }
+html, body { height: 100% }
+body {
+	font-family: 'Helvetica', sans-serif;
+	-webkit-text-size-adjust: none;
+	tab-size: 4;
+	-moz-tab-size: 4;
+	line-height: 1.2;
+	color: #eee;
+	font-family: Courier;
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+}
+* {
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-overflow-scrolling: touch;
+}
+h1 {
+	font-family: Courier;
+	color: #04f;
+	font-size: 4em;
+	text-align: center;
+	font-weight: normal;
+	margin: 0.5em 0;
+}
+main {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+}
+main, #output { margin: 0 0.5em }
+#cont {
+	display: flex;
+	flex-grow: 1;
+}
+#challenges {
+	background: #ffa;
+	color: #000;
+	padding: 1em;
+}
+#challenges h2 { margin: 0 }
+#console {
+	height: 25%;
+	color: #0d0;
+	border-top: 1px solid #888;
+	overflow: auto;
+}
+#console, #spacer { width: 100% }
+#console > label {
+	display: flex;
+	background: #222;
+	padding: 0 1em;
+	flex-shrink: 0;
+}
+#console > label > span { white-space: pre }
+input {
+	margin: -1px 0 1px;
+	padding: 0;
+	border: none;
+	flex-grow: 1;
+	font: 1em Courier;
+	color: #0d0;
+	background: transparent;
+}
+pre { font: 1em Courier }
+#editor:not([hidden]), #simulation:not([hidden]) {
+	flex-grow: 1;
+	display: flex;
+	margin: 0.5em 0;
+}
+iframe { width: 100% }
+.ta-cont {
+	flex-grow: 1;
+	position: relative;
+	overflow-x: hidden; overflow-y: auto;
+	border: 1px solid #fff;
+}
+.code, .code-display, #code, #code-display {
+	word-break: break-all;
+	display: block;
+	margin: 2px 2px 0;
+	color: #fff;
+	background: transparent;
+	font: 1.2em monospace;
+	white-space: pre-wrap;
+	line-height: 1.2;
+	resize: none;
+	outline: none;
+	border: none;
+	padding: 0 0 4px 4px;
+}
+.code-display.static {
+	min-height: 0;
+	padding: 0.3em;
+}
+.code, #code {
+	position: absolute;
+	top: 0; right: 0;
+	z-index: 1;
+	color: transparent;
+	min-height: calc(100% - 2px);
+	overflow: hidden;
+}
+.code-display, #code-display {
+	width: calc(100% - 4px);
+	border-left: 1px solid #444;
+}
+#caret {
+	position: absolute;
+	background: #fff;
+	width: 1px;
+	margin-right: -1px;
+}
+code .line::before {
+	left: 0;
+	content: attr(data-linenum);
+	color: #aaa;
+	display: inline-block;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+	padding: 0 2px 0 4px;
+	position: absolute;
+}
+code .line.warning::before {
+	color: #ff6;
+	font-weight: bold;
+}
+.ta-cont[data-line='0'] { padding-left: 0.8em }
+.ta-cont[data-line='1'] { padding-left: 1.3em }
+.ta-cont[data-line='2'] { padding-left: 1.8em }
+.ta-cont[data-line='3'] { padding-left: 2.3em }
+.ta-cont[data-line='4'] { padding-left: 2.8em }
+.ta-cont[data-line='5'] { padding-left: 3.3em }
+.ta-cont[data-line='6'] { padding-left: 3.8em }
+.ta-cont[data-line='7'] { padding-left: 4.3em }
+.ta-cont[data-line='0'] textarea { width: calc(100% - 0.8rem - 5px) }
+.ta-cont[data-line='1'] textarea { width: calc(100% - 1.3rem - 5px) }
+.ta-cont[data-line='2'] textarea { width: calc(100% - 1.8rem - 5px) }
+.ta-cont[data-line='3'] textarea { width: calc(100% - 2.3rem - 5px) }
+.ta-cont[data-line='4'] textarea { width: calc(100% - 2.8rem - 5px) }
+.ta-cont[data-line='5'] textarea { width: calc(100% - 3.3rem - 5px) }
+.ta-cont[data-line='6'] textarea { width: calc(100% - 3.8rem - 5px) }
+.ta-cont[data-line='7'] textarea { width: calc(100% - 4.3rem - 5px) }
+code .xml-tag { color: #adf }
+code .xml-attr { color: #ff7 }
+code .xml-attr-ns { color: #fa8 }
+code .xml-attr-value { color: #9f9 }
+code .processing-instruction { color: #cd8 }
+code .cdata { color: #ec8 }
+code .entity { color: #f99 }
+code .universal { color: #fd8 }
+code .at-rule-name { color: #dd8 }
+code .element { color: #fb0 }
+code .class { color: #ff0 }
+code .id { color: #e80 }
+code .attribute-name { color: #baf }
+code .attribute-value { color: #afb }
+code .pseudo-class { color: #9ff }
+code .pseudo-element { color: #6fa }
+code .nth { color: #ffb }
+code .nth .n { color: #f55 }
+code .nth .number { color: #f88 }
+code .reference-combinator { color: #faa }
+code .property, code .logical, code .nth .n, code .colon { font-style: italic }
+code .no-nest { color: #ddd }
+code .value { color: #aaf }
+code .unit { color: #bcf }
+code .inline-comment { color: #888 }
+code .keyword { color: #fd3 }
+code .reserved, code .bad { color: #f00 }
+code .constant, code .string .escape, .template.punctuation { color: #df0 }
+code .string { color: #6c3 }
+code .regex { color: #ffa }
+code .regex .open, code .regex .close, code .regex .modifier { color: #ff0 }
+code .regex .escape, code .color { color: #afa }
+code .regex .backreference { color: #0f0 }
+code .regex .special { color: #faa }
+code .regex .grouper { color: #fff }
+code .regex .charclass {
+	color: #ffd;
+	background: #730;
+}
+code .regex .charclass .range { color: #fed }
+code .regex .charclass .punctuation, code .function-call { color: #f90 }
+code .regex .quantifier { color: #2af }
+code .regex .quantifier .punctuation { color: #8cf }
+code .regex .modifier, code .generator-star, code .newvar { font-weight: bold }
+code .operator, code .generator-star, code .colon, code .value.string { color: #ff8 }
+code .operator.assigns, code .equals { color: #8ff }
+code .argument, code .number { color: #3df }
+code .function-name { color: #f60 }
+code .prototype { color: #f00 }
+code .punctuation, code .dot { color: #ddd }
+code .capvar { color: #9ac }
+code .browser { color: #9bd }

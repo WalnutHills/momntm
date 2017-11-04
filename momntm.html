@@ -2,93 +2,491 @@
 <html>
 	<head>
 		<title>momntm</title>
-		<style>
-			html { background: #000 }
-			html, body { height: 100% }
-			body {
-				font-family: 'Helvetica', sans-serif;
-				-webkit-text-size-adjust: none;
-				tab-size: 4;
-				-moz-tab-size: 4;
-				line-height: 1.2;
-				color: #eee;
-				font-family: Courier;
-				display: flex;
-				flex-direction: column;
-				margin: 0;
-			}
-			* {
-				box-sizing: border-box;
-				-moz-box-sizing: border-box;
-				-webkit-overflow-scrolling: touch;
-			}
-			h1 {
-				font-family: Courier;
-				color: #04f;
-				font-size: 4em;
-				text-align: center;
-				font-weight: normal;
-				margin: 0.5em 0;
-			}
-			main { flex-grow: 1 }
-			main, #output { margin: 0 1em }
-			#cont {
-				display: flex;
-				flex-grow: 1;
-			}
-			#challenges {
-				background: #ffa;
-				color: #000;
-				padding: 1em;
-			}
-			#challenges h2 { margin: 0 }
-			#console {
-				height: 25%;
-				color: #0d0;
-				border-top: 1px solid #888;
-				overflow: auto;
-			}
-			#console, #spacer { width: 100% }
-			#console > label {
-				display: flex;
-				background: #222;
-				padding: 0 1em;
-				flex-shrink: 0;
-			}
-			#console > label > span { white-space: pre }
-			input {
-				margin: -1px 0 1px;
-				padding: 0;
-				border: none;
-				flex-grow: 1;
-				font: 1em Courier;
-				color: #0d0;
-				background: transparent;
-			}
-			pre { font: 1em Courier }
-		</style>
-		<script>
-			function start() {
-				document.getElementById('challenges').hidden = false;
-				return '';
-			}
-			var commandList = ['help: shows this', 'start: starts the game', 'launch: start mission'];
-			function respond(text) {
-				var command = text.split(' ', 2)[0];
-				if (command == 'help') return 'Commands:\n- ' + commandList.join('\n- ') + '\n';
-				if (command == 'start') return start();
-				return '';
-			}
-			addEventListener('DOMContentLoaded', function() {
-				document.getElementById('input').addEventListener('keypress', function(e) {
-					if (e.keyCode == 13) {
-						output.appendChild(document.createTextNode('> ' + this.value + '\n' + respond(this.value)));
-						this.value = '';
-						this.scrollIntoView();
-					}
-				});
+		<link rel="stylesheet" href="main.css" />
+		<script src="main.js"></script>
+		<textarea id="canvas-js" hidden="">'use strict';
+window.alert = window.confirm = window.prompt = null;
+
+var canvas = document.getElementById('canvas'),
+	ctx = canvas.getContext('2d'),
+	textarea = document.createElement('textarea');
+document.body.appendChild(textarea);
+textarea.style.position = 'fixed';
+textarea.style.top = '0';
+textarea.style.zIndex = '-1';
+textarea.style.opacity = '0';
+function handleTA() {
+	if (document.activeElement == textarea || document.activeElement == document.body) {
+		textarea.focus();
+	}
+}
+var keyCodes = {};
+addEventListener('keydown', function(e) {
+	keyCodes[e.which] = true;
+	handleTA();
+});
+addEventListener('keyup', function(e) {
+	delete keyCodes[e.which];
+	delete keyCodes[229];
+	handleTA();
+});
+addEventListener('keypress', function(e) {
+	handleTA();
+});
+//var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl') || null; //3D, anyone?
+var trans = 'transparent', none = trans,
+	enabledFullScreen = false,
+	suppressKeyboard = false,
+	requestEnableFullScreen = new Error('No fullscreen capability'),
+	mouseX = 0,
+	mouseY = 0,
+	mousePressed = 0,
+	key = '',
+	width = 400,
+	height = 400,
+	scale = canvas.width / canvas.offsetWidth;
+addEventListener('resize', function() {
+	if (enabledFullScreen) canvas.style.zoom = 100 / devicePixelRatio + '%';
+	scale = canvas.width / canvas.offsetWidth;
+	if (enabledFullScreen) {
+		size();
+		reset(true);
+		refresh();
+		draw();
+	}
+});
+Object.getOwnPropertyNames(Math).forEach(function(element) {
+	window[element] = Math[element];
+});
+Number.prototype.bound = function(l, h) {
+	return isNaN(h) ? Math.min(this, l) : Math.max(Math.min(this, h), l);
+};
+function requestFullLayoutMode() {
+	enabledFullScreen = requestEnableFullScreen = true;
+	canvas.style.zoom = 100 / devicePixelRatio + '%';
+	document.getElementById('console').style.height = 'auto';
+	document.getElementById('console').style.maxHeight = '240px';
+	size();
+	reset(true);
+}
+function rand(x, y) {
+	if (!x &amp;&amp; x != 0) {
+		x = 0;
+		y = 1;
+	} else if (!y &amp;&amp; y != 0) {
+		y = x;
+		x = 0;
+	}
+	return random() * (y - x) + x;
+}
+var TAU = 2 * PI;
+Object.getOwnPropertyNames(Math).forEach(function(element, index) {
+	window[element] = Math[element];
+});
+function rgb(r, g, b, a) {
+	return 'rgba(' + round(r) + ',' + round(g) + ',' + round(b) + ',' + (a === undefined ? 1 : a) + ')';
+}
+function hsl(h, s, l, a) {
+	return 'hsla(' + round(h) + ',' + round(s) + '%,' + round(l) + '%,' + (a === undefined ? 1 : a) + ')';
+}
+function fill(color, g, b) {
+	ctx.fillStyle = none;
+	if (color >= 0) {
+		if (b >= 0) ctx.fillStyle = rgb(color, g, b);
+		else ctx.fillStyle = rgb(color, color, color);
+	} else ctx.fillStyle = color;
+}
+function stroke(color, g, b) {
+	ctx.strokeStyle = none;
+	if (color >= 0) {
+		if (b >= 0) ctx.strokeStyle = rgb(color, g, b);
+		else ctx.strokeStyle = rgb(color, color, color);
+	} else ctx.strokeStyle = color;
+}
+function strokeWidth(w) {
+	ctx.lineWidth = Math.max(0.0001, w);
+}
+function line(x1, y1, x2, y2) {
+	ctx.lineCap = 'round';
+	ctx.beginPath();
+	ctx.moveTo(x1, y1);
+	ctx.lineTo(x2, y2);
+	ctx.stroke();
+}
+function curve(x1, y1, x2, y2, x3, y3, x4, y4) {
+	ctx.lineCap = 'round';
+	ctx.beginPath();
+	ctx.moveTo(x1, y1);
+	if (x4 !== undefined &amp;&amp; y4 !== undefined) ctx.bezierCurveTo(x2, y2, x3, y3, x4, y4);
+	else if (x3 !== undefined &amp;&amp; y3 !== undefined) ctx.bezierCurveTo(x2, y2, x2, y2, x3, y3);
+	else ctx.lineTo(x2, y2);
+	ctx.stroke();
+}
+function bcurve(x1, y1, x2, y2, x3, y3, x4, y4) {
+	curve(
+		x2,
+		y2,
+		x2 * 5 / 4 - x3 / 4,
+		y2 * 5 / 4 - y3 / 4,
+		x1,
+		y1,
+		x1,
+		y1
+	);
+}
+function rect(x, y, w, h) {
+	ctx.fillRect(x, y, w, h);
+	ctx.strokeRect(x, y, w, h);
+}
+function point(x, y) {
+	line(x, y, x + 0.01, y + 0.01);
+}
+function ellipse(cx, cy, rx, ry) {
+	if (!cx &amp;&amp; cx !== 0) throw new Error('Invalid or missing argument[0] for ellipse');
+	if (!cy &amp;&amp; cy !== 0) throw new Error('Invalid or missing argument[1] for ellipse');
+	if (!(rx >= 0)) throw new Error('Invalid or missing argument[2] for ellipse');
+	if (!(ry >= 0)) throw new Error('Invalid or missing argument[3] for ellipse');
+	ctx.save();
+	ctx.beginPath();
+	ctx.translate(cx - rx, cy - ry);
+	ctx.scale(rx, ry);
+	ctx.arc(1, 1, 1, 0, TAU, false);
+	ctx.restore();
+	ctx.stroke();
+	ctx.fill();
+}
+function textAlign(h, v) {
+	if (arguments.length !== 2) throw new Error('textAlign expects 2 arguments');
+	ctx.textAlign = h.toLowerCase();
+	ctx.textBaseline = v.toLowerCase();
+}
+function font(f) {
+	ctx.font = f;
+}
+function text(x, y, t) {
+	strokeWidth(ctx.lineWidth * 2);
+	ctx.strokeText(t, x, y);
+	ctx.fillText(t, x, y);
+	strokeWidth(ctx.lineWidth / 2);
+}
+function bg() {
+	var oldFill = ctx.fillStyle;
+	var oldStroke = ctx.strokeStyle;
+	fill.apply(this, arguments);
+	ctx.fillRect(0, 0, width, height);
+	fill(oldFill);
+	stroke(oldStroke);
+}
+function size(x, y) {
+	if (enabledFullScreen) {
+		x = innerWidth * devicePixelRatio;
+		y = (innerHeight - document.getElementById('console').offsetHeight - 32) * devicePixelRatio;
+	}
+	canvas.width = width = x;
+	canvas.height = height = y;
+}
+function resetLog() {
+	var node = document.getElementById('console'), child;
+	while (child = node.firstChild) node.removeChild(child);
+}
+function removeLog() {
+	resetLog();
+	document.getElementById('console').hidden = true;
+}
+function print() {
+	var pre = document.createElement('pre');
+	for (var i = 0; i &lt; arguments.length; i++) {
+		if (i) pre.appendChild(document.createTextNode(' '));
+		var span = document.createElement('span');
+		span.appendChild(document.createTextNode(arguments[i]));
+		pre.appendChild(span);
+	}
+	document.getElementById('console').appendChild(pre);
+	document.getElementById('console').hidden = false;
+}
+var refresh = function() {};
+function reset(a) {
+	if (!a) {
+		size(400, 400);
+		bg(0);
+		resetLog();
+		frameRate = 30;
+		draw = function() {};
+		refresh = function() {};
+	}
+	fill(255);
+	stroke(255, 0, 0);
+	strokeWidth(2);
+}
+function error(e) {
+	var pre = document.createElement('pre');
+	pre.style.color = '#f22';
+	if (!(navigator.userAgent.indexOf('Safari') != -1 &amp;&amp; e instanceof SyntaxError)) {
+		if (window.chrome) pre.appendChild(document.createTextNode(e.stack));
+		else {
+			var strong = document.createElement('strong');
+			strong.appendChild(document.createTextNode('Line ' + (e.line || e.lineNumber) + ' '));
+			pre.appendChild(strong);
+		}
+	}
+	pre.appendChild(document.createTextNode(e));
+	document.getElementById('console').appendChild(pre);
+}
+var frameRate = 30;
+var draw = function() {};
+(function drawLoop() {
+	key = textarea.value;
+	try {
+		draw();
+	} catch (e) {
+		error(e);
+	}
+	textarea.value = key = '';
+	setTimeout(drawLoop, 1000 / frameRate);
+}());
+reset();
+function updateMouseCoords(e) {
+	try {
+		var cRect = canvas.getBoundingClientRect();
+		if (e.touches[0].clientX &gt; cRect.left &amp;&amp; e.touches[0].clientX &lt; cRect.right &amp;&amp; e.touches[0].clientY &gt; cRect.top &amp;&amp; e.touches[0].clientY &lt; cRect.bottom) {
+			mouseX = (e.touches[0].clientX - Math.round(cRect.left)) / cRect.width * width;
+			mouseY = (e.touches[0].clientY - Math.round(cRect.top)) / cRect.height * height;
+		}
+	} catch (e) {}
+}
+if (navigator.userAgent.indexOf('Mobile') == -1) {
+	addEventListener('mousemove', function(e) {
+		var cRect = canvas.getBoundingClientRect();
+		mouseX = (e.clientX - Math.round(cRect.left)) / cRect.width * width;
+		mouseY = (e.clientY - Math.round(cRect.top)) / cRect.height * height;
+		if (enabledFullScreen) {
+			mouseX *= devicePixelRatio;
+			mouseY *= devicePixelRatio;
+		}
+		mouseX = mouseX.bound(0, width);
+		mouseY = mouseY.bound(0, height);
+	});
+	canvas.addEventListener('mousedown', function() {
+		mousePressed = true;
+	});
+	addEventListener('mouseup', function() {
+		mousePressed = false;
+	});
+} else {
+	addEventListener('touchstart', function(e) {
+		if (e.touches.length == 1) {
+			mousePressed = true;
+			updateMouseCoords(e);
+		} else mousePressed = false;
+	});
+	addEventListener('touchmove', function(e) {
+		if (e.touches.length == 1) {
+			mousePressed = true;
+			updateMouseCoords(e);
+		} else mousePressed = false;
+	});
+	addEventListener('touchend', function(e) {
+		mousePressed = false;
+		updateMouseCoords(e);
+	});
+	if (!suppressKeyboard) {
+		var b = document.createElement('a');
+		b.textContent = '[Keyboard]';
+		b.style.display = 'block';
+		b.onclick = handleTA;
+		document.body.appendChild(b);
+	}
+}
+requestEnableFullScreen;
+frameRate = 60;
+var particles = [{
+		mass: 40,
+		pos: {x: 0, y: 0},
+		vel: {x: 0, y: 0},
+		rv: 0,
+		angle: 0,
+		anglevel: 0.5
+	}],
+	ship = particles[0],
+	totalMass = ship.mass,
+	scaleMass = 0,
+	vscale = Math.min(width, height) / 4,
+	g = 0.1,
+	time = 0,
+	dt = 0.3,
+	addParticlesTo = 100,
+	desktop = navigator.userAgent.indexOf('Mobile') == -1,
+	spf = 1,
+	clumpability = 1.5,
+	vectorScale = 1,
+	help = false,
+	noToggleHelp = false,
+	removeBoundsScale = 10,
+	msX, msY, lmX, lmY,
+	center = {x: 0, y: 0, mass: 0},
+	pscale = 1,
+	costMove = 1,
+	costRotate = 1,
+	energyProp = 0.1;
+var imgObj = new Image();
+imgObj.src = 'ship.svg';
+function sap() {
+	return sqrt(scaleMass + 1000);
+}
+function sx(x) {
+	return (x - center.x) * vscale / sap() + width / 2;
+}
+function sy(y) {
+	return (y - center.y) * vscale / sap() + height / 2;
+}
+function rsx(x) {
+	return (x - width / 2) / vscale * sap() + center.x;
+}
+function rsy(y) {
+	return (y - height / 2) / vscale * sap() + center.y;
+}
+function sa(m) {
+	return m * vscale / sap();
+}
+function rsa(m) {
+	return m * sap() / vscale;
+}
+var lastAngle = 0;
+draw = function() {
+	var vision = Infinity;
+	for (var i = 1; i &lt; particles.length; i++) {
+		var cx = particles[i].pos.x - ship.pos.x;
+		var cy = particles[i].pos.y - ship.pos.y;
+		var dist = sqrt(cx * cx + cy * cy);
+		var dx = cx - dist * cos(ship.angle);
+		var dy = cy - dist * sin(ship.angle);
+		var dist2 = dx * dx + dy * dy;
+		if (dist2 &lt; particles[i].mass * 2 &amp;&amp; vision &gt; dist) vision = {
+			dist: dist,
+			type:  particles[i].type
+		};
+	}
+	ship.moveAngle = atan2(ship.vel.y, ship.vel.x);
+	var results = spaceShip(vision, ship, time);
+	ship.mass -= results.move * results.move * costMove + results.rotate * costRotate;
+	if (ship.mass <= 0) {
+		draw = function() {};
+		return;
+	}
+	ship.vel.x += results.move * cos(results.moveAngle);
+	ship.vel.y += results.move * sin(results.moveAngle);
+	ship.anglevel += results.rotate;
+	bg(0);
+	stroke(none);
+	scaleMass += (scaleMass * 0.999 + totalMass + 0.001 - scaleMass).bound(-100, 1);
+	while (particles.length &lt; addParticlesTo) {
+		var x = rand(-2, 2),
+			y = rand(-2, 2),
+			m = rand(2, 8);
+		if (x * x + y * y &gt; 0.6) {
+			particles.push({
+				mass: m,
+				pos: {x: rsx((x + 1) * width / 2), y: rsy((y + 1) * width / 2)},
+				vel: {x: rsa(y * 4 + rand(-3, 3)) + ship.vel.x, y: rsa(-x * 4 + rand(-3, 3)) + ship.vel.y},
+				rv: 0,
+				type: rand() &lt; energyProp ? 1 : 0
 			});
-		</script>
+			totalMass += m;
+		}
+	}
+	if (rand() < 0.1) addParticlesTo++;
+	for (var stepN = 0; stepN &lt; spf; stepN++) {
+		for (var i = 0; i &lt; particles.length; i++) {
+			var t = particles[i],
+				nx = 0,
+				ny = 0,
+				dispx = sx(t.pos.x),
+				dispy = sy(t.pos.y);
+			if (dispx &lt; -width * removeBoundsScale || dispx &gt; width * (removeBoundsScale + 1) || dispy &lt; -height * removeBoundsScale || dispy &gt; height * (removeBoundsScale + 1)) t.rv++;
+			else t.rv--;
+			if (t.rv &lt; 0) t.rv = 0;
+			if (t.rv &gt; 30) {
+				totalMass -= t.mass;
+				particles.splice(i, 1);
+				continue;
+			}
+			for (var j = 0; j &lt; particles.length; j++) {
+				if (j == i) continue;
+				var u = particles[j],
+					bdist = (u.pos.x - t.pos.x) * (u.pos.x - t.pos.x) + (u.pos.y - t.pos.y) * (u.pos.y - t.pos.y);
+				if (bdist / clumpability &lt; u.mass) {
+					if ((!i || !j) &amp;&amp; !t.type &amp;&amp; !u.type) {
+						draw = function() {};
+						break;
+					}
+					u.pos.x = u.pos.x * u.mass + t.pos.x * t.mass;
+					u.pos.y = u.pos.y * u.mass + t.pos.y * t.mass;
+					u.pos.x /= u.mass + t.mass;
+					u.pos.y /= u.mass + t.mass;
+					u.vel.x = u.vel.x * u.mass + t.vel.x * t.mass;
+					u.vel.y = u.vel.y * u.mass + t.vel.y * t.mass;
+					u.vel.x /= u.mass + t.mass;
+					u.vel.y /= u.mass + t.mass;
+					u.mass += t.mass;
+					particles.splice(i, 1);
+					break;
+				}
+				nx += u.mass / bdist * (u.pos.x - t.pos.x);
+				ny += u.mass / bdist * (u.pos.y - t.pos.y);
+			}
+			t.vel.x += nx / t.mass * g * dt / spf;
+			t.vel.y += ny / t.mass * g * dt / spf;
+		}
+		var totalVelX = 0, totalVelY = 0, combMass = 0;
+		for (var i = 0; i &lt; particles.length; i++) {
+			var t = particles[i];
+			if (sx(t.pos.x) &gt; 0 &amp;&amp; sx(t.pos.x) &lt; width &amp;&amp; sy(t.pos.y) &gt; 0 &amp;&amp; sy(t.pos.y) &lt; height) {
+				totalVelX += t.vel.x * t.mass;
+				totalVelY += t.vel.y * t.mass;
+				combMass += t.mass;
+			}
+		}
+		if (combMass) {
+			totalVelX /= combMass;
+			totalVelY /= combMass;
+		}
+		for (var i = 0; i &lt; particles.length; i++) {
+			var t = particles[i];
+			t.pos.x += (t.vel.x -= totalVelX / 20 / spf) * dt / spf;
+			t.pos.y += (t.vel.y -= totalVelY / 20 / spf) * dt / spf;
+		}
+	}
+	ship.angle += ship.anglevel * dt;
+	center.x = ship.pos.x;
+	center.y = ship.pos.y;
+	time += dt;
+	var tsize = sa(Math.sqrt(ship.mass)) * pscale;
+	fill(255, 255, 255);
+	ctx.rotate(ship.moveAngle);
+	// ctx.drawImage(imgObj, 0, 0, 214, 985, width/2, height/2, tsize, tsize);
+	ctx.rotate(-ship.moveAngle);
+	ctx.restore();
+	ellipse(sx(ship.pos.x), sy(ship.pos.y), tsize, tsize);
+	fill(0);
+	ellipse(sx(ship.pos.x) + tsize * 0.6 * cos(ship.angle), sy(ship.pos.y) + tsize * 0.6 * sin(ship.angle), tsize / 10, tsize / 10);
+	stroke(255, 255, 255);
+	line(sx(ship.pos.x), sy(ship.pos.y), sx(ship.pos.x + ship.vel.x * ship.mass * vectorScale), sy(ship.pos.y + ship.vel.y * ship.mass * vectorScale));
+	stroke(none);
+	for (var i = 1; i &lt; particles.length; i++) {
+		var tsize = sa(Math.sqrt(particles[i].mass)) * pscale;
+		if (particles[i].type) fill(tsize / 2, tsize, 255);
+		else fill(255, tsize, tsize / 2);
+		ellipse(sx(particles[i].pos.x), sy(particles[i].pos.y), tsize, tsize);
+		stroke(255, 255, 255);
+		line(sx(particles[i].pos.x), sy(particles[i].pos.y), sx(particles[i].pos.x + particles[i].vel.x * particles[i].mass * vectorScale), sy(particles[i].pos.y + particles[i].vel.y * particles[i].mass * vectorScale));
+		stroke(none);
+	}
+	fill(0, 96, 255);
+	font(18 * (desktop ? 2 : 1) + 'px sans-serif');
+	textAlign('left', 'bottom');
+	text(6, height - 4, particles.length + ' particle' + (particles.length == 1 ? '' : 's') + ' with ' + totalMass.toFixed(2) + ' mass at time ' + time.toFixed(1));
+}
+requestFullLayoutMode();</textarea>
 	</head>
 	<body>
 		<div id="cont">
@@ -107,18 +505,36 @@
 				</ul>
 			</aside>
 			<main>
-				<h1>DevDoodle</h1>
-				<h1>momntm</h1>
-				<p>Code your spaceship to:</p>
-				<ul>
-					<li>avoid asteroids</li>
-					<li>collect energy</li>
-					<li>beat competitors</li>
-				</ul>
+				<section id="intro">
+					<h1>DevDoodle</h1>
+					<h1><img src="momntm.svg" /></h1>
+					<p>Code your spaceship to:</p>
+					<ul>
+						<li>avoid asteroids</li>
+						<li>collect energy</li>
+						<li>beat competitors</li>
+					</ul>
+					<p>Type "help" for commands. Type "start" to get coding!</p>
+				</section>
+				<section id="editor" hidden="">
+					<div id="ta-cont" class="ta-cont">
+						<textarea id="code" spellcheck="false" autocapitalize="off" autocorrect="off">function spaceShip(vision, ship, time) {
+	return {
+		move: rand(0.1),
+		moveAngle: ship.moveAngle,
+		rotate: 0
+	};
+}</textarea>
+						<code id="code-display" data-line="1"></code>
+					</div>
+				</section>
+				<section id="simulation" hidden="">
+					<iframe id="output" sandbox="allow-scripts"></iframe>
+				</section>
 			</main>
 		</div>
 		<section id="console">
-			<pre id="output"></pre>
+			<pre id="coutput"></pre>
 			<label><span>> </span><input id="input" autofocus="" /></label>
 		</console>
 	</body>
